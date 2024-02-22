@@ -8,5 +8,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private GameObject controls;
     [SerializeField] public TextAsset book;
 
+    public int CurrentWordIndex;
+
     
 }

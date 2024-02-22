@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -25,6 +26,8 @@ public class Player : MonoBehaviour
     {
         isPlaying = false;
         Controls.OnPlayButtonPressed += Play;
+        Controls.OnPauseButtonPressed += Pause;
+        Controls.OnCahngeWordButtonPressed += ChangeWordOnce;
         Controls.OnSliderEdited += SetSpeed;
         gameManager = FindObjectOfType<GameManager>();
         fileManger = FindObjectOfType<FileManger>();
@@ -60,40 +63,60 @@ public class Player : MonoBehaviour
 
     public void Play()
     {
-        isPlaying = !isPlaying;
-        StartCoroutine(ReadNextWord());
+        if (isPlaying == true)
+        {
+            Pause();
+        }
+        else
+        {
+            isPlaying = true;
+            if (!IsInvoking("ReadNextWord"))
+            {
+                StartCoroutine(ReadNextWord());
+            }
+        }
     }
 
-    public IEnumerator ReadNextWord()
+    public void Pause()
     {
-        float wordLifeDuration = (words[currentWordIndex].Count() * 0.03f) + speed;
-        
-        if (wordLifeDuration < speed)
-        {
-            wordLifeDuration = speed;
-        }
+        isPlaying = false;
+    }
 
+    public void ChangeWordOnce(int step)
+    {
         if (currentWordIndex < words.Count - 1)
         {
-            center.text = words[currentWordIndex];
+            center.text = words[currentWordIndex + step];
             if (currentWordIndex > 0)
             {
-                left.text = words[currentWordIndex - 1];
+                left.text = words[currentWordIndex + step - 1];
             }
             else { left.text = ""; }
             if (currentWordIndex < words.Count - 1)
             {
-                right.text = words[currentWordIndex + 1];
+                right.text = words[currentWordIndex + step + 1];
             }
             else { right.text = ""; }
-            currentWordIndex++;
+            currentWordIndex += step;
             OnWordIndexChange?.Invoke(currentWordIndex);
         }
         else
         {
             Debug.Log("End of book");
         }
+    }
+
+    public IEnumerator ReadNextWord()
+    {
+        float wordLifeDuration = (words[currentWordIndex].Count() * 0.025f) + speed;
         
+        if (wordLifeDuration < speed)
+        {
+            wordLifeDuration = speed;
+        }
+
+        ChangeWordOnce(1);
+
         yield return new WaitForSeconds(wordLifeDuration);
         if (isPlaying)
         {
